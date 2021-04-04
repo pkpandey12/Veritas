@@ -53,13 +53,14 @@ Helper functions
 
 # message = contract.functions.sayHello().call()
 
-class ImageView(APIView):
+# View to get list of all saved images or upload new image
+class ImageListView(APIView):
   parser_classes = (MultiPartParser, )
 
+  # Upload image to IPFS and server's local storage
   def post(self, request, format=None):
     print(request.data)
     file = request.FILES['file']
-
     # IPFS upload
 
     if not file:
@@ -70,6 +71,12 @@ class ImageView(APIView):
 
     if req.file.size > MAX_SIZE:
       return Response("File provided must be less than "+str(MAX_SIZE)+" bytes")
+    
+    file = {
+      "label": request.data["label"],
+      "timestamp": request.data["timestamp"],
+      "photo": request.data["photo"]
+    }
 
     ipfsResponse = ipfs.add(file)
     if not ipfsResponse:
@@ -86,14 +93,43 @@ class ImageView(APIView):
 
     newImage = Image(
       label = request.data["label"],
-      datetime = request.data["datetime"],
+      timestamp = request.data["timestamp"],
       ipfsHash = ipfsResponse["Hash"],
-      ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(req.data.ipfsHash),
+      ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsHash),
       transactionHash = ipfsResponse["Hash"],
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
+      photo = request.data["photo"]
     )
+    newImage.save()
+    serializer = ImageSerializer(newImage)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    Image.save()
-    
+  # Get image from server DB
+  def get(self, request, format=None):
+    images = Image.objects.all()
+    serializer = ImageSerializer(images, many=True)
+    return Response(serializer.data)
+
+# Retrieve specific image by IPFS hash, or update existing image
+class ImageDetailView(APIView):
+
+  def get_object(self, ipfsHash):
+    try: 
+      return Image.objects.get(ipfsHash=ipfsHash)
+    except Image.DoesNotExist:
+      raise Http404
+    #  image = ipfs.cat(ipfsHash)
       
+  # Return image in response
+  def get(self, request, ipfsHash, format=None):
+    image = self.get_object(ipfsHash)
+    serializer = ImageSerializer(image)
+    return Response(serializer.data)
+
+  #TODO Figure out request format to finish up update
+
+  def delete(self, request, ipfsHash, format=None):
+    image = self.get_object(ipfsHash)
+    image.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
