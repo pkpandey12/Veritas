@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
-from Images.views import ImageView
+from Images.views import *
 router = DefaultRouter()
 
 # router.register(r'images', ImageView, basename="image")
