@@ -23,8 +23,8 @@ API endpoint creation
 """
 
 urlpatterns = [
-    url(r'^upload/$', views.upload_image),
-    # path('upload/', views.ImageView.as_view(), name='images_list')
+    path('<ipfsHash>/', views.ImageDetailView.as_view()),
+    path('', views.ImageListView.as_view()),
 ]
 
 # REFERENCES
