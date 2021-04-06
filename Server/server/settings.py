@@ -27,7 +27,7 @@ SECRET_KEY = '-qjjv280!%1)79t%0qn=71q^m*sy%^o+nqr=j8kc3@ap(j8*rt'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['246658e6313b.ngrok.io']
 
 
 # Application definition
@@ -80,12 +80,21 @@ WSGI_APPLICATION = 'server.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-     'default': {
-         'ENGINE': 'djongo',
-         'NAME': 'your-db-name',
-     }
- }
-
+    'default': {
+        'ENGINE': 'djongo',
+        'CLIENT': {
+            'name': 'veritasTest',
+            'host' :'mongodb+srv://veritasfyp:veritas@cluster0.krdu2.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+            'username': 'veritasfyp' ,
+            'password': 'veritas' ,
+            'authMechanism' : 'SCRAM-SHA-1' 
+    #  'default': {
+    #      'ENGINE': 'djongo',
+    #      'NAME': 'your-db-name',
+    #  }
+    }
+}
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
