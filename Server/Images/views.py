@@ -24,6 +24,7 @@ import magic
 from exif import Image as exImage
 from PIL import Image as pilImage
 from io import BytesIO
+from django.core.files.images import ImageFile
 import ipfshttpclient
 import base64
 import ast
@@ -129,6 +130,7 @@ class ImageListView(APIView):
       photo = request.data["file"]
     )
     newImage.save()
+    newImage.delete()
     serializer = ImageSerializer(newImage)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -148,15 +150,13 @@ class ImageDetailView(APIView):
     try: 
       return Image.objects.get(ipfsHash=ipfsHash)
     except Image.DoesNotExist:
-        '''
-        Python's support for IPFS is hot garbage
 
-        image = ipfs.cat(ipfsHash).decode('utf-8')
+        image = ipfs.cat(ipfsHash)
 
         # This next bit assumes the IPFS hash led to an image
-        image_exif = exImage(image.getvalue())
-        image_details_dict = image_exif.image_description
-        print("here")
+        image_exif = exImage(image)
+        image_details_dict = ast.literal_eval(image_exif.image_description)
+
         newImage = Image(
           label = image_details_dict['label'],
           timestamp = image_details_dict['timestamp'],
@@ -164,14 +164,11 @@ class ImageDetailView(APIView):
           ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsHash),
           transactionHash = ipfsHash,
           blockHash = ipfsHash,
-          photo = image
+          photo = ImageFile(BytesIO(image), name=image_details_dict['label'])
         )
-        print(newImage)
         newImage.save()
-        print("saved")
         return newImage
-        '''
-        raise Http404
+        #raise Http404
       
   # Return image in response
   def get(self, request, ipfsHash, format=None):

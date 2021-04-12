@@ -69,7 +69,7 @@ class TextListView(APIView):
     if len(title + body) > MAX_SIZE:
       return Response("File provided must be less than "+str(MAX_SIZE)+" bytes")
     
-    timestamp = dateutil.parser.parse(request.data["datetime"])
+    timestamp = request.data["datetime"]
 
     text_data = {
         'title': title,
@@ -93,7 +93,7 @@ class TextListView(APIView):
 
     newText = Text(
       title = title,
-      timestamp = timestamp,
+      timestamp = dateutil.parser.parse(timestamp),
       ipfsHash = ipfsResponse["Hash"],
       ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
       transactionHash = ipfsResponse["Hash"],
@@ -102,6 +102,7 @@ class TextListView(APIView):
       body = body
     )
     newText.save()
+    newText.delete()
     serializer = TextSerializer(newText)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -121,30 +122,27 @@ class TextDetailView(APIView):
     try: 
       return Text.objects.get(ipfsHash=ipfsHash)
     except Text.DoesNotExist:
-        '''
-        Python's support for IPFS is hot garbage
 
-        image = base64.b64decode(ipfs.cat(ipfsHash))
-        print(image)
-        # This next bit assumes the IPFS hash led to an image
-        image_exif = exImage(image.getvalue())
-        image_details_dict = image_exif.image_description
-        print("here")
-        newImage = Image(
-          label = image_details_dict['label'],
-          timestamp = image_details_dict['timestamp'],
+        text = ipfs.cat(ipfsHash).decode('utf-8')
+        # This next bit assumes the IPFS hash led to text
+        string_segments = text.split('\n ENDMETA \n')
+        text_data = ast.literal_eval(string_segments[0])
+        body = string_segments[1]
+
+        newText = Text(
+          title = text_data['title'],
+          timestamp = dateutil.parser.parse(text_data['timestamp']),
           ipfsHash = ipfsHash,
-          ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsHash),
+          ipfsAddress = "https://gateway.ipfs.io/ipfs/"+ipfsHash,
           transactionHash = ipfsHash,
+          # TODO: Change below to actual value
           blockHash = ipfsHash,
-          photo = image
+          body = body
         )
-        print(newImage)
-        newImage.save()
-        print("saved")
-        return newImage
-        '''
-        raise Http404
+        newText.save()
+        return newText
+        
+        #raise Http404
       
   # Return image in response
   def get(self, request, ipfsHash, format=None):
