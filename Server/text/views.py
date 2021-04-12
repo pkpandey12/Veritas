@@ -1,13 +1,11 @@
-"""
-Imports and Libraries
-"""
+from django.shortcuts import render
 
 from django.shortcuts import render, redirect
 from django.urls import reverse
 import json
 from web3 import Web3, HTTPProvider
-from .models import Image
-from .serializers import ImageSerializer
+from .models import Text
+from .serializers import TextSerializer
 from django.utils import timezone
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
@@ -20,10 +18,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 from django.http import HttpResponse, Http404
-import magic
-from exif import Image as exImage
-from PIL import Image as pilImage
-from io import BytesIO
+from io import BytesIO, StringIO
 import ipfshttpclient
 import base64
 import ast
@@ -53,59 +48,37 @@ contract = web3.eth.contract(address = deployed_contract_address, abi=contract_a
 
 MAX_SIZE = 52428800
 
-"""
-Helper functions
-"""
-
-
-# How to call contract function
-
-# message = contract.functions.sayHello().call()
+# View to upload new text post to IPFS and server storage
 
 # Request format: 
-#     file: the image to be uploaded
-#     label: the image's label
-#     datetime: the datetime of the image
-
-# View to get list of all saved images or upload new image
-class ImageListView(APIView):
+#     title: text title
+#     datetime: the timestamp of the image
+#     body: text body
+class TextListView(APIView):
   parser_classes = (MultiPartParser, )
 
-  # Upload image to IPFS and server's local storage
+  # Upload text to IPFS and server's local storage
   def post(self, request, format=None):
-    print("IN POST")
-    print(request.data)
-    file = request.data['file']
-    print(file.size)
+    title = request.data['title']
+    body = request.data['body']
+
     # IPFS upload
-    if not file:
-      return Response("No file provided")
-    
-    # gets raw bytes from the file so the buffer can be read 
-    # instead of saving to storage first
-    
-    image_from_request = file.read()
-    if "image" not in magic.from_buffer(image_from_request, mime=True):
-      return Response("File provided must be an image")
-    
-    if file.size > MAX_SIZE:
+    if (not title or not body) :
+      return Response("No text provided")
+
+    if len(title + body) > MAX_SIZE:
       return Response("File provided must be less than "+str(MAX_SIZE)+" bytes")
     
-    # this package lets you add stuff to the EXIF, so we can have some
-    # useful data stored there
-    image_exif = exImage(image_from_request)
+    timestamp = dateutil.parser.parse(request.data["datetime"])
 
-    image_data = {
-      "label": request.data['label'],
-      "timestamp": request.data['datetime']
+    text_data = {
+        'title': title,
+        'timestamp': timestamp
     }
-    # image description seemed a good tag to use
-    image_exif.image_description = str(image_data)
-
+    text_to_upload = BytesIO((str(text_data) + "\n ENDMETA \n" + body).encode(encoding='UTF-8'))
     # upload to IPFS finally
-    file_to_upload = BytesIO(image_exif.get_file())
-    ipfsResponse = ipfs.add(file_to_upload)
-    file_to_upload.close()
+    ipfsResponse = ipfs.add(text_to_upload)
+    text_to_upload.close()
     if not ipfsResponse:
       return Response("IPFS processing error")
     else:
@@ -118,41 +91,41 @@ class ImageListView(APIView):
     print("ETHEREUM RESPONSE", ethResp)
     # Saving the model locally
 
-    newImage = Image(
-      label = request.data["label"],
-      timestamp = dateutil.parser.parse(request.data["datetime"]),
+    newText = Text(
+      title = title,
+      timestamp = timestamp,
       ipfsHash = ipfsResponse["Hash"],
       ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
       transactionHash = ipfsResponse["Hash"],
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
-      photo = request.data["file"]
+      body = body
     )
-    newImage.save()
-    serializer = ImageSerializer(newImage)
+    newText.save()
+    serializer = TextSerializer(newText)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
   # Get image from server DB
   def get(self, request, format=None):
     print("IN GET")
-    images = Image.objects.all()
-    serializer = ImageSerializer(images, many=True)
+    texts = Text.objects.all()
+    serializer = TextSerializer(texts, many=True)
     return Response(serializer.data)
 
 
 
 # Retrieve specific image by IPFS hash, or delete existing image
-class ImageDetailView(APIView):
+class TextDetailView(APIView):
 
   def get_object(self, ipfsHash):
     try: 
-      return Image.objects.get(ipfsHash=ipfsHash)
-    except Image.DoesNotExist:
+      return Text.objects.get(ipfsHash=ipfsHash)
+    except Text.DoesNotExist:
         '''
         Python's support for IPFS is hot garbage
 
-        image = ipfs.cat(ipfsHash).decode('utf-8')
-
+        image = base64.b64decode(ipfs.cat(ipfsHash))
+        print(image)
         # This next bit assumes the IPFS hash led to an image
         image_exif = exImage(image.getvalue())
         image_details_dict = image_exif.image_description
@@ -175,11 +148,11 @@ class ImageDetailView(APIView):
       
   # Return image in response
   def get(self, request, ipfsHash, format=None):
-    image = self.get_object(ipfsHash)
-    serializer = ImageSerializer(image)
+    text = self.get_object(ipfsHash)
+    serializer = TextSerializer(text)
     return Response(serializer.data)
 
   def delete(self, request, ipfsHash, format=None):
-    image = self.get_object(ipfsHash)
-    image.delete()
+    text = self.get_object(ipfsHash)
+    text.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
