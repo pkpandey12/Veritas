@@ -72,6 +72,8 @@ class ImageListView(APIView):
   parser_classes = (MultiPartParser, )
 
   # Upload image to IPFS and server's local storage
+  # As far as handling multiple requests at the same time, that is not a problem we are likely to face. gunicorn,(which we use by default
+  # as a worker for django deployments on heroku) is singlethreaded, hence, requests will be automatically queued.
   def post(self, request, format=None):
     print("IN POST")
     print(request.data)

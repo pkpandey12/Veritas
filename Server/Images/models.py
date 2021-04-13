@@ -17,3 +17,13 @@ class Image(models.Model):
 
   def __str__(self):
     return self.label
+
+
+class Similar(models.Model):
+  parent_image = models.ForeignKey(Image, on_delete=models.CASCADE)
+  image_id = models.ObjectIdField(primary_key=True, unique=True)
+  percentage = models.FloatField(null=True)
+
+  def __str__(self):
+    return self.image_id
+

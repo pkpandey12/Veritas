@@ -32,7 +32,7 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 // CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK 
-const ngroklink = "http://246658e6313b.ngrok.io"
+const ngroklink = "https://8c5eb67e6fe1.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -110,6 +110,8 @@ export default class App extends Component {
 
     console.log(result);
 
+    // var id = crypto.randomBytes(20).toString('hex');
+
     if (!result.cancelled) {
       const source = { uri: result.uri };
       this.setState({
@@ -117,8 +119,8 @@ export default class App extends Component {
         avatarSource: source,
         uri: result.uri,
         type: result.type,
-        name: "YOLO",
-        originalName: "YOLO"
+        name: "YOLO1235.png",
+        originalName: "YOLO1235.png"
         });
     }
 
@@ -127,8 +129,8 @@ export default class App extends Component {
     data.append('file', {
       uri: result.uri,
       type: result.type,
-      name:  "YOLO",
-      originalname:  "YOLO",
+      name:  "YOLO1235.png",
+      originalname:  "YOLO1235.png",
     });
 
     data.append('datetime', result.exif.DateTimeOriginal);
