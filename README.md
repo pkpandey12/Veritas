@@ -13,7 +13,9 @@
 
 3. Expose endpoint using ngrok ( install at <https://dashboard.ngrok.com/get-started/setup> ):
    1. Make sure you're in the folder where you installed ngrok and the file `./ngrok` is present
-   2. `./ngrok htpp 8000`
+   2. `./ngrok http 8000`
    3. Note the link you get here and paste it in `App.js` in `./Client` in the `ngroklink` field
 
 4. Run the expo app on Lan.
+
+5. Run the celery worker in `./Server`: celery worker -A server --pool=solo -l info

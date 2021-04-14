@@ -1,2 +1,7 @@
-__pycache__/
+# Folders
+!**/__pycache__/
 node_modules/
+/Server/media/images/
+
+# Files
+*.pyc
