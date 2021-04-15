@@ -31,8 +31,8 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 
-// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK 
-const ngroklink = "https://8c5eb67e6fe1.ngrok.io"
+// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
+const ngroklink =  "http://8dfc2fdce442.ngrok.io"// "http://246658e6313b.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -54,7 +54,8 @@ export default class App extends Component {
       clickUpload: false,
       uploadStatus: false,
       label: '',
-      images: []
+      images: [],
+      description: ''
     };
   }
 
@@ -204,8 +205,13 @@ export default class App extends Component {
       this.setState({ loading: null })
       return alert('Enter image label')
     }
+    if (this.state.description === '') {
+      this.setState({ loading: null })
+      return alert('Enter image description')
+    }
     else {
       data.append('label', this.state.label);
+      data.append('description', this.state.description);
       console.log("Trying to upload");
       console.log("this", data)
       const config = {
@@ -259,6 +265,15 @@ export default class App extends Component {
               <TextInput
                 placeholder="Label"
                 onChangeText={(label) => this.setState({ label })}
+                style={styles.label}
+                underlineColorAndroid="transparent"
+              />
+            </View>
+
+            <View style={{ alignItems: 'center' }}>
+              <TextInput
+                placeholder="Description"
+                onChangeText={(description) => this.setState({ description })}
                 style={styles.label}
                 underlineColorAndroid="transparent"
               />
