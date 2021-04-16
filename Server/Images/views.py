@@ -30,7 +30,7 @@ import ast
 import dateutil.parser
 # Create your views here.
 
-blockchain_address = 'http://localhost:7545'
+blockchain_address = 'http://localhost:8545'
 web3 = Web3(HTTPProvider(blockchain_address))
 # /dns/ipfs-api.example.com/tcp/443/https
 ipfs = ipfshttpclient.connect("/dns/ipfs.infura.io/tcp/5001/https")
@@ -40,10 +40,10 @@ web3.eth.defaultAccount = web3.eth.accounts[0]
 # TODO: REMEMBER TO CHANGE THESE TO GANACHE SETTINGS AFTER BASIC SERVER TESTS ARE FINISHED
 
 # This depends on your PC's path gotta change it
-compiled_contract_path = '/Users/praneetkumarpandey/FYP/RevPro-FYP/veritas/Server/Blockchain/build/contracts/ImageHash.json'
+compiled_contract_path = '/home/sthavir/fyp/Veritas/Server/Blockchain/build/contracts/ImageHash.json'
 
 # Change this every time you to deploy to Ganache
-deployed_contract_address = '0xC421c64d05562890aA8a6498f89A7AeCc0913D1e'
+deployed_contract_address = '0xE256B4388321e520fda99BADC94d3F2cD9725924'
 
 with open(compiled_contract_path) as file:
   contract_json = json.load(file)
@@ -65,7 +65,9 @@ Helper functions
 # Request format: 
 #     file: the image to be uploaded
 #     label: the image's label
-#     timestamp: the timestamp of the image
+#     datetime: the timestamp of the image
+#     article: image's accompanying article
+#     tags: tags
 
 # View to get list of all saved images or upload new image
 class ImageListView(APIView):
@@ -78,6 +80,7 @@ class ImageListView(APIView):
     print("IN POST")
     print(request.data)
     file = request.data['file']
+    article = request.data['article']
     print(file.size)
     # IPFS upload
     if not file:
@@ -93,6 +96,17 @@ class ImageListView(APIView):
     if file.size > MAX_SIZE:
       return Response("File provided must be less than "+str(MAX_SIZE)+" bytes")
     
+    # upload article to IPFS
+    article_to_upload = BytesIO(article.encode(encoding='UTF-8'))
+    article_ipfs_response = ipfs.add(article_to_upload)
+    article_to_upload.close()
+    if not article_ipfs_response:
+      return Response("IPFS processing error")
+    else:
+      print("IPFS upload successful, hash = " + str(article_ipfs_response['Hash']))
+    
+    ethResp = contract.functions.saveHash(article_ipfs_response['Hash']).call()
+
     # this package lets you add stuff to the EXIF, so we can have some
     # useful data stored there
     image_exif = exImage(image_from_request)
@@ -100,7 +114,8 @@ class ImageListView(APIView):
     image_data = {
       "label": request.data['label'],
       "timestamp": request.data['datetime'],
-      "tags": request.data['tags']
+      "tags": request.data['tags'],
+      "article_hash": article_ipfs_response['Hash']
     }
     # image description seemed a good tag to use
     image_exif.image_description = str(image_data)
@@ -123,13 +138,15 @@ class ImageListView(APIView):
     newImage = Image(
       label = request.data["label"],
       timestamp = dateutil.parser.parse(request.data["datetime"]),
-      ipfsHash = ipfsResponse["Hash"],
-      ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
+      imgipfsHash = ipfsResponse["Hash"],
+      imgipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
+      articleipfsHash = article_ipfs_response['Hash'],
       transactionHash = ipfsResponse["Hash"],
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
       photo = request.data["file"],
-      tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"])
+      tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"]),
+      article = article
     )
     newImage.save()
     serializer = ImageSerializer(newImage)
@@ -149,32 +166,25 @@ class ImageDetailView(APIView):
 
   def get_object(self, ipfsHash):
     try: 
-      return Image.objects.get(ipfsHash=ipfsHash)
+      return Image.objects.get(imgipfsHash=ipfsHash)
     except Image.DoesNotExist:
-        '''
-        Python's support for IPFS is hot garbage
-
-        image = base64.b64decode(ipfs.cat(ipfsHash))
-        print(image)
-        # This next bit assumes the IPFS hash led to an image
-        image_exif = exImage(image.getvalue())
-        image_details_dict = image_exif.image_description
-        print("here")
-        newImage = Image(
-          label = image_details_dict['label'],
-          timestamp = image_details_dict['timestamp'],
-          ipfsHash = ipfsHash,
-          ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsHash),
-          transactionHash = ipfsHash,
-          blockHash = ipfsHash,
-          photo = image
-        )
-        print(newImage)
-        newImage.save()
-        print("saved")
-        return newImage
-        '''
-        raise Http404
+      image = ipfs.cat(ipfsHash)
+      image_exif = exImage(image)
+      image_details_dict = ast.literal_eval(image_exif.image_description)
+      article = ipfs.cat(image_details_dict['article_hash']).decode('utf-8')
+      newImage = Image(
+        label = image_details_dict['label'],
+        timestamp = image_details_dict['timestamp'],
+        imgipfsHash = ipfsHash,
+        imgipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsHash),
+        articleipfsHash = image_details_dict['article_hash'],
+        transactionHash = ipfsHash,
+        blockHash = ipfsHash,
+        photo = image
+      )
+      newImage.save()
+      return newImage
+      #raise Http404
       
   # Return image in response
   def get(self, request, ipfsHash, format=None):
@@ -195,16 +205,16 @@ class ImageTagView(APIView):
     ids = []
     for i in images:
       if all(item in i.get_tags() for item in request.data["tags"]):
-        ids.append(i.ipfsHash)
+        ids.append(i.imgipfsHash)
     
-    filtered_images = Image.objects.filter(ipfsHash__in=ids)
+    filtered_images = Image.objects.filter(imgipfsHash__in=ids)
     serializer = ImageSerializer(filtered_images, many=True)
     return Response(serializer.data)
 
 # View for image similarity
 class SimilarityView(APIView):
   def get(self, request, ipfsHash, format=None):
-    image = Image.objects.get(ipfsHash=ipfsHash)
+    image = Image.objects.get(imgipfsHash=ipfsHash)
     similar_images = Similar.objects.filter(parent_image=image)
     serializer = SimilarSerializer(similar_images, many=True)
     return Response(serializer.data)

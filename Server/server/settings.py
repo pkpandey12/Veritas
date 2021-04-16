@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ['f0eadebdb46f.ngrok.io', 'localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'rest_framework',
+    'rest_framework.authtoken',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,6 +57,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        # TODO change this
+        'rest_framework.permissions.AllowAny'
+    )
+}
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",

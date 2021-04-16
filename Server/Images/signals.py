@@ -7,7 +7,7 @@ from .models import Image, Similar
 @receiver(post_save, sender=Image)
 def comparison_handler(sender, instance, **kwargs):
   print(instance._id)
-  compare_images.delay(instance.ipfsHash)
+  compare_images.delay(instance.imgipfsHash)
   
 @receiver(post_save, sender=Similar)
 def similar_save(sender, instance, **kwargs):

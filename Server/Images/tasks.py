@@ -28,12 +28,12 @@ IMAGE_REDUCTION_FACTOR = 8
 @shared_task
 def compare_images(id):
   ipfs = ipfshttpclient.connect("/dns/ipfs.infura.io/tcp/5001/https")
-  instance = Image.objects.get(ipfsHash = id)
-  logger.info(instance.ipfsHash)
-  cat_resp = ipfs.cat(instance.ipfsHash)
+  instance = Image.objects.get(imgipfsHash = id)
+  logger.info(instance.imgipfsHash)
+  cat_resp = ipfs.cat(instance.imgipfsHash)
   i1 = pillow_image.open(io.BytesIO(cat_resp))
   i1 = i1.resize(tuple(int(x/IMAGE_REDUCTION_FACTOR) for x in i1.size), pillow_image.ANTIALIAS)
-  images = np.array(Image.objects.exclude(ipfsHash=id))
+  images = np.array(Image.objects.exclude(imgipfsHash=id))
   chunks = np.array_split(images,NUMBER_OF_PROCESSES)
 
   with mp.Manager() as manager:
@@ -67,7 +67,7 @@ def create_similar(comp_list, instance):
 
 def comparison_thread(comp_list, i,ipfs, images, i1):
   for im in images:
-    i2 = pillow_image.open(io.BytesIO(ipfs.cat(im.ipfsHash)))
+    i2 = pillow_image.open(io.BytesIO(ipfs.cat(im.imgipfsHash)))
     i2 = i2.resize(i1.size)
     logger.info(i1.size)
     logger.info(i2.size)
@@ -77,6 +77,6 @@ def comparison_thread(comp_list, i,ipfs, images, i1):
     logger.info("percentage:\t"+str(percentage))
     if percentage>SIMILARITY_THRESHOLD:
       comp_list.append({
-        "ipfs": im.ipfsHash,
+        "ipfs": im.imgipfsHash,
         "percentage": percentage
       })
