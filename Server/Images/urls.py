@@ -26,6 +26,7 @@ urlpatterns = [
     path('search/', views.ImageTagView.as_view()),
     path('<ipfsHash>/', views.ImageDetailView.as_view()),
     path('', views.ImageListView.as_view()),
+    path('similar/<ipfsHash>/', views.SimilarityView.as_view()),
 ]
 
 # REFERENCES

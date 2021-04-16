@@ -6,8 +6,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 import json
 from web3 import Web3, HTTPProvider
-from .models import Image
-from .serializers import ImageSerializer
+from .models import Image, Similar
+from .serializers import ImageSerializer, SimilarSerializer
 from django.utils import timezone
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
@@ -200,3 +200,10 @@ class ImageTagView(APIView):
     serializer = ImageSerializer(filtered_images, many=True)
     return Response(serializer.data)
 
+# View for image similarity
+class SimilarityView(APIView):
+  def get(self, request, ipfsHash, format=None):
+    image = Image.objects.get(ipfsHash=ipfsHash)
+    similar_images = Similar.objects.filter(parent_image=image)
+    serializer = SimilarSerializer(similar_images, many=True)
+    return Response(serializer.data)
