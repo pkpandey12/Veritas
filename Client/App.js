@@ -24,6 +24,8 @@ import Constants from "expo-constants";
 const { manifest } = Constants;
 
 import axios from "axios";
+import ImageViewer from 'react-native-image-zoom-viewer';
+
 
 const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts.dev
   ? manifest.debuggerHost.split(`:`).shift().concat(`:8000`)
@@ -32,7 +34,7 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 // CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
-const ngroklink =  "http://8dfc2fdce442.ngrok.io"// "http://246658e6313b.ngrok.io"
+const ngroklink =  "http://962b493a8b7c.ngrok.io"// "http://246658e6313b.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -55,7 +57,8 @@ export default class App extends Component {
       uploadStatus: false,
       label: '',
       images: [],
-      description: ''
+      description: '',
+      tags: ''
     };
   }
 
@@ -212,6 +215,7 @@ export default class App extends Component {
     else {
       data.append('label', this.state.label);
       data.append('description', this.state.description);
+      data.append('tags', this.state.tags);
       console.log("Trying to upload");
       console.log("this", data)
       const config = {
@@ -279,12 +283,22 @@ export default class App extends Component {
               />
             </View>
 
+            <View style={{ alignItems: 'center' }}>
+              <TextInput
+                placeholder="Tags (separate with commas)"
+                onChangeText={(tags) => this.setState({ tags })}
+                style={styles.label}
+                underlineColorAndroid="transparent"
+              />
+            </View>
+
             <View style={{ alignItems: 'center', marginTop: '10%' }}>
               <TouchableOpacity onPress={() => this.upload()} style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF' }]}>
                 <Text style={{ fontWeight: 'bold' }}>UPLOAD</Text>
               </TouchableOpacity>
             </View>
           </View>
+          
         </View>{
           this.state.loading !== null ? (
             this.state.loading ? (
