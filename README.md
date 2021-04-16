@@ -18,4 +18,4 @@
 
 4. Run the expo app on Lan.
 
-5. Run the celery worker in `./Server`: celery worker -A server --pool=solo -l info
+5. Run the celery worker in `./Server`: `celery worker -A server --pool=solo -l info`

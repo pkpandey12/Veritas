@@ -127,7 +127,8 @@ class ImageListView(APIView):
       transactionHash = ipfsResponse["Hash"],
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
-      photo = request.data["file"]
+      photo = request.data["file"],
+      tags = json.dumps(["red"])
     )
     newImage.save()
     serializer = ImageSerializer(newImage)
@@ -184,3 +185,18 @@ class ImageDetailView(APIView):
     image = self.get_object(ipfsHash)
     image.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+# View for investigating tags
+class ImageTagView(APIView):
+  def post(self, request, format=None):
+    print(request.data)
+    images = Image.objects.all()
+    ids = []
+    for i in images:
+      if all(item in i.get_tags() for item in request.data["tags"]):
+        ids.append(i.ipfsHash)
+    
+    filtered_images = Image.objects.filter(ipfsHash__in=ids)
+    serializer = ImageSerializer(filtered_images, many=True)
+    return Response(serializer.data)
+
