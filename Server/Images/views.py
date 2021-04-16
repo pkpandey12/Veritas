@@ -99,7 +99,8 @@ class ImageListView(APIView):
 
     image_data = {
       "label": request.data['label'],
-      "timestamp": request.data['datetime']
+      "timestamp": request.data['datetime'],
+      "tags": request.data['tags']
     }
     # image description seemed a good tag to use
     image_exif.image_description = str(image_data)
@@ -128,7 +129,7 @@ class ImageListView(APIView):
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
       photo = request.data["file"],
-      tags = json.dumps(["red"])
+      tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"])
     )
     newImage.save()
     serializer = ImageSerializer(newImage)
