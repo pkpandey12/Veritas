@@ -1,5 +1,6 @@
 from djongo import models
 from django.utils.timezone import now
+import json
 
 # Create your models here.
 
@@ -14,10 +15,16 @@ class Image(models.Model):
   blockHash = models.CharField(max_length=128, null=True)
   timestamp = models.DateTimeField(default=now, editable=False)
   photo = models.ImageField(upload_to='images')
+  tags = models.TextField(default=json.dumps(["image"]))
 
   def __str__(self):
     return self.label
 
+  def get_tags(self):
+    if self.tags:
+      return json.loads(self.tags)
+    else:
+      return json.loads(json.dumps(["image"]))
 
 class Similar(models.Model):
   parent_image = models.ForeignKey(Image, on_delete=models.CASCADE)
