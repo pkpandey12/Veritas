@@ -81,7 +81,7 @@ class ImageListView(APIView):
     print("IN POST")
     print(request.data)
     file = request.data['file']
-    article = reqeust.data["article"]
+    article = request.data["article"]
     print(file.size)
     # IPFS upload
     if not file:
