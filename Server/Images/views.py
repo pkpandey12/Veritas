@@ -6,8 +6,8 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 import json
 from web3 import Web3, HTTPProvider
-from .models import Image
-from .serializers import ImageSerializer
+from .models import Image, Similar
+from .serializers import ImageSerializer, SimilarSerializer
 from django.utils import timezone
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
@@ -100,7 +100,8 @@ class ImageListView(APIView):
 
     image_data = {
       "label": request.data['label'],
-      "timestamp": request.data['datetime']
+      "timestamp": request.data['datetime'],
+      "tags": request.data['tags']
     }
     # image description seemed a good tag to use
     image_exif.image_description = str(image_data)
@@ -137,7 +138,8 @@ class ImageListView(APIView):
       transactionHash = ipfsResponse["Hash"],
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
-      photo = request.data["file"]
+      photo = request.data["file"],
+      tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"])
     )
     newImage.save()
     serializer = ImageSerializer(newImage)
@@ -197,3 +199,25 @@ class ImageDetailView(APIView):
     image = self.get_object(ipfsHash)
     image.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+# View for investigating tags
+class ImageTagView(APIView):
+  def post(self, request, format=None):
+    print(request.data)
+    images = Image.objects.all()
+    ids = []
+    for i in images:
+      if all(item in i.get_tags() for item in request.data["tags"]):
+        ids.append(i.ipfsHash)
+    
+    filtered_images = Image.objects.filter(ipfsHash__in=ids)
+    serializer = ImageSerializer(filtered_images, many=True)
+    return Response(serializer.data)
+
+# View for image similarity
+class SimilarityView(APIView):
+  def get(self, request, ipfsHash, format=None):
+    image = Image.objects.get(ipfsHash=ipfsHash)
+    similar_images = Similar.objects.filter(parent_image=image)
+    serializer = SimilarSerializer(similar_images, many=True)
+    return Response(serializer.data)
