@@ -9,7 +9,7 @@
 import React, { Component, Fragment } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, PixelRatio, Image, Linking, Dimensions, TextInput, ScrollView, FlatList, Modal } from 'react-native';
 import ImageLicker from 'react-native-image-picker';
-import { Icon, Container, Header, Left, Button, Body, Title, Right } from 'native-base';
+import { Icon, Container, Header, Left, Button, Body, Title, Right, Thumbnail } from 'native-base';
 
 import Spinner from './components/Spinner';
 import Card from './components/Card';
@@ -18,6 +18,7 @@ import TextContainer from './components/TextContainer';
 import * as ImagePicker from 'expo-image-picker';
 // import Constants from 'expo-constants';
 import * as Permissions from 'expo-permissions';
+import moment from 'moment';
 import { LogBox } from 'react-native';
 
 import Constants from "expo-constants";
@@ -33,8 +34,8 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 
-// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK 
-const ngroklink = "https://f0eadebdb46f.ngrok.io"
+// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
+const ngroklink = "http://21b287002e0c.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -59,11 +60,13 @@ export default class App extends Component {
       images: [],
       article: '',
       tags: '',
-      isVisible: false
+      isVisible: false,
+      modalData: []
     };
   }
-  displayModal(show){
-  this.setState({isVisible: show})
+  displayModal(show, modalData){
+  this.setState({isVisible: show, modalData: modalData});
+  console.log("ModalData", modalData);
 }
 
   componentDidMount() {
@@ -77,11 +80,10 @@ export default class App extends Component {
       },
     };
     axios.get(`${ngroklink}/images/`) //--- .then((resp) => resp.json())
-      .then((resp) => resp.json())
       .then((res) => {
-        console.log("GET response", res)
+        //console.log("GET response", res)
         this.setState({
-          images: res,
+          images: res.data,
           fetchLoading: false
         })
       })
@@ -92,8 +94,7 @@ export default class App extends Component {
           error: err.message
         });
       })
-      console.log("images:");
-    console.log(this.state.images);
+
   }
 
   getPermissionAsync = async () => {
@@ -155,53 +156,6 @@ export default class App extends Component {
     };
   };
 
-
-
-  //
-  // selectImage = async () => {
-  //
-  //   ImageLicker.showImageLicker(options, async (response) => {
-  //
-  //     if (response.didCancel) {
-  //       this.setState({ error: 'Image upload failed', loading: null });
-  //     } else if (response.error) {
-  //       this.setState({ error: 'Image upload failed', loading: null });
-  //     } else if (response.customButton) {
-  //       this.setState({ error: 'Image upload failed', loading: null });
-  //     } else {
-  //       const source = { uri: response.uri };
-  //       this.setState({
-  //         uploadStatus: true,
-  //         avatarSource: source,
-  //         uri: response.uri,
-  //         type: response.type,
-  //         name: response.fileName,
-  //         originalName: response.fileName
-  //       });
-  //
-  //
-  //       global.data = new FormData();
-  //
-  //       data.append('file', {
-  //         uri: response.uri,
-  //         type: response.type,
-  //         name: response.fileName,
-  //         originalname: response.fileName,
-  //       });
-  //
-  //
-  //       const config = {
-  //         method: 'POST',
-  //         headers: {
-  //           Accept: 'application/json',
-  //           'Content-Type': 'multipart/form-data',
-  //         },
-  //         body: data,
-  //       };
-  //     }
-  //   })
-  // }
-
   upload = async () => {
     this.setState({
       loading: true
@@ -234,8 +188,7 @@ export default class App extends Component {
       };
 
 
-      fetch(`${ngroklink}/images/`, config)
-        .then((resp) => resp.json())
+      fetch(`${ngroklink}/images/`, config) //        .then((resp) => resp.json())
         .then((res) => {
           console.log("POST response", res)
           this.setState((prevState) => ({
@@ -401,7 +354,7 @@ export default class App extends Component {
                                   renderItem={(item, index) => {
 
                                     return (
-                                      <TouchableOpacity onPress={() => { this.displayModal(true);}}>
+                                      <TouchableOpacity onPress={() => { this.displayModal(true, item.item);}}>
                                       <View style = { styles.container2 }>
                                       <Modal
                                          animationType = {"slide"}
@@ -412,17 +365,17 @@ export default class App extends Component {
                                        }}>
 
                                                        <View style = { styles.container2 }>
-                                                       <Image
-                                                         source={item.item.ipfsAddress}
-                                                       style = { styles.image }/>
-                                                       <Text >
-                                                           Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                                                           Maecenas eget tempus augue, a convallis velit.
-                                                       </Text>
+                                                           <Image source={{ uri: this.state.modalData.imgipfsAddress }} style={{ width: 300, height: 300 }} />
+                                                            <Text >
+                                                             Name: {"\t"}{this.state.modalData.label} {"\n"}
+                                                             Date and Time: {"\t"}{moment(this.state.modalData.createdAt).format("MMMM Do YYYY, h:mm:ss a")} {"\n"}
+                                                             IPFSAddress: {"\t"}{this.state.modalData.imgipfsAddress} {"\n"}
+                                                             BlockHash: {"\t"}{this.state.modalData.blockHash} {"\n"}
+                                                            </Text>
 
-                                                       <Text style={styles.closeText}
+                                                            <Text style={styles.closeText}
                                                              onPress={() => {
-                                                               this.displayModal(!this.state.isVisible);}
+                                                               this.displayModal(!this.state.isVisible, []);}
                                                                }>
                                                                Go Back
                                                        </Text>
@@ -433,7 +386,7 @@ export default class App extends Component {
                                         key={index}
                                         state={this.state}
                                         createdAt={item.item.createdAt}
-                                        address={item.item.ipfsAddress}
+                                        address={item.item.imgipfsAddress}
                                         blockHash={item.item.blockHash}
                                         transactionHash={item.item.transactionHash}
                                         label={item.item.label}

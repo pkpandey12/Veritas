@@ -96,7 +96,7 @@ class ImageListView(APIView):
 
     if file.size > MAX_SIZE:
       return Response("File provided must be less than "+str(MAX_SIZE)+" bytes")
-    
+
     # upload article to IPFS
     article_to_upload = BytesIO(article.encode(encoding='UTF-8'))
     article_ipfs_response = ipfs.add(article_to_upload)
@@ -105,7 +105,7 @@ class ImageListView(APIView):
       return Response("IPFS processing error")
     else:
       print("IPFS upload successful, hash = " + str(article_ipfs_response['Hash']))
-    
+
     ethResp = contract.functions.saveHash(article_ipfs_response['Hash']).call()
 
     # this package lets you add stuff to the EXIF, so we can have some
@@ -166,7 +166,7 @@ class ImageListView(APIView):
 class ImageDetailView(APIView):
 
   def get_object(self, ipfsHash):
-    try: 
+    try:
       return Image.objects.get(imgipfsHash=ipfsHash)
     except Image.DoesNotExist:
       image = ipfs.cat(ipfsHash)
@@ -186,7 +186,7 @@ class ImageDetailView(APIView):
       newImage.save()
       return newImage
       #raise Http404
-      
+
   # Return image in response
   def get(self, request, ipfsHash, format=None):
     image = self.get_object(ipfsHash)
@@ -207,7 +207,7 @@ class ImageTagView(APIView):
     for i in images:
       if all(item in i.get_tags() for item in request.data["tags"]):
         ids.append(i.imgipfsHash)
-    
+
     filtered_images = Image.objects.filter(imgipfsHash__in=ids)
     serializer = ImageSerializer(filtered_images, many=True)
     return Response(serializer.data)
