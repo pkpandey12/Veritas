@@ -21,7 +21,7 @@ logger = get_task_logger(__name__)
 # TODO: potentially make use of the skimage library
 # TODO: add error handling
 
-SIMILARITY_THRESHOLD = 30
+SIMILARITY_THRESHOLD = 50
 NUMBER_OF_PROCESSES = 4
 IMAGE_REDUCTION_FACTOR = 8
 
@@ -50,13 +50,17 @@ def compare_images(id):
     logger.info(comp_list)
     sim_flag = create_similar(comp_list, instance)
 
+    if not sim_flag:
+      Image.objects.filter(imgipfsHash = id).update(verified=True)
+
   logger.info("Comparison process finished")
 
   # TODO: add post comparison signal perhaps?
   
 
 def create_similar(comp_list, instance):
-
+  if not comp_list:
+    return False
   for sim in comp_list:
     Similar.objects.create(
       parent_image = instance,

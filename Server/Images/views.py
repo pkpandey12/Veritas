@@ -80,7 +80,7 @@ class ImageListView(APIView):
     print("IN POST")
     print(request.data)
     file = request.data['file']
-    article = request.data['article']
+    article = ""
     print(file.size)
     # IPFS upload
     if not file:
@@ -114,7 +114,7 @@ class ImageListView(APIView):
     image_data = {
       "label": request.data['label'],
       "timestamp": request.data['datetime'],
-      "tags": request.data['tags'],
+      "tags": "red",
       "article_hash": article_ipfs_response['Hash']
     }
     # image description seemed a good tag to use
@@ -145,7 +145,8 @@ class ImageListView(APIView):
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
       photo = request.data["file"],
-      tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"]),
+      # tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"]),
+      tags = json.dumps(["red"]),
       article = article
     )
     newImage.save()
@@ -207,7 +208,7 @@ class ImageTagView(APIView):
       if all(item in i.get_tags() for item in request.data["tags"]):
         ids.append(i.imgipfsHash)
     
-    filtered_images = Image.objects.filter(imgipfsHash__in=ids)
+    filtered_images = Image.objects.filter(imgipfsHash__in=ids).filter(verified=True)
     serializer = ImageSerializer(filtered_images, many=True)
     return Response(serializer.data)
 
