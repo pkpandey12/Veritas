@@ -30,7 +30,7 @@ import ast
 import dateutil.parser
 # Create your views here.
 
-blockchain_address = 'http://localhost:8545'
+blockchain_address = 'http://localhost:7545'
 web3 = Web3(HTTPProvider(blockchain_address))
 # /dns/ipfs-api.example.com/tcp/443/https
 ipfs = ipfshttpclient.connect("/dns/ipfs.infura.io/tcp/5001/https")
@@ -40,10 +40,10 @@ web3.eth.defaultAccount = web3.eth.accounts[0]
 # TODO: REMEMBER TO CHANGE THESE TO GANACHE SETTINGS AFTER BASIC SERVER TESTS ARE FINISHED
 
 # This depends on your PC's path gotta change it
-compiled_contract_path = '/home/sthavir/fyp/Veritas/Server/Blockchain/build/contracts/ImageHash.json'
+compiled_contract_path = '/Users/praneetkumarpandey/FYP/RevPro-FYP/veritas/Server/Blockchain/build/contracts/ImageHash.json'
 
 # Change this every time you to deploy to Ganache
-deployed_contract_address = '0xE256B4388321e520fda99BADC94d3F2cD9725924'
+deployed_contract_address = '0xC421c64d05562890aA8a6498f89A7AeCc0913D1e'
 
 with open(compiled_contract_path) as file:
   contract_json = json.load(file)

@@ -84,7 +84,7 @@ export default function Search(this: any) {
           <CardMedia
             component="img"
             alt="ipfs image"
-            image={props.image["ipfsAddress"]}
+            image={props.image["imgipfsAddress"]}
             title={props.image["label"]}
             width={1/4}
           />
