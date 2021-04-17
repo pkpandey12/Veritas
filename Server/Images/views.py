@@ -28,6 +28,7 @@ import ipfshttpclient
 import base64
 import ast
 import dateutil.parser
+from hexbytes import HexBytes
 # Create your views here.
 
 blockchain_address = 'http://localhost:7545'
@@ -80,7 +81,7 @@ class ImageListView(APIView):
     print("IN POST")
     print(request.data)
     file = request.data['file']
-    article = ""
+    article = reqeust.data["article"]
     print(file.size)
     # IPFS upload
     if not file:
@@ -114,7 +115,7 @@ class ImageListView(APIView):
     image_data = {
       "label": request.data['label'],
       "timestamp": request.data['datetime'],
-      "tags": "red",
+      "tags": request.data["tags"],
       "article_hash": article_ipfs_response['Hash']
     }
     # image description seemed a good tag to use
@@ -129,7 +130,6 @@ class ImageListView(APIView):
       print("IPFS upload successful, hash = " + str(ipfsResponse['Hash']))
 
     # Blockchain upload
-    # TODO: Add error handling
     
     ethResp = contract.functions.saveHash(ipfsResponse['Hash']).call()
     print("ETHEREUM RESPONSE", ethResp)
@@ -141,12 +141,10 @@ class ImageListView(APIView):
       imgipfsHash = ipfsResponse["Hash"],
       imgipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
       articleipfsHash = article_ipfs_response['Hash'],
-      transactionHash = ipfsResponse["Hash"],
-      # TODO: Change below to actual value
-      blockHash = ipfsResponse["Hash"],
+      transactionHash = (web3.eth.get_transaction_by_block('latest', 0).hash).hex(),
+      blockHash = (web3.eth.get_block('latest').hash).hex(),
       photo = request.data["file"],
-      # tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"]),
-      tags = json.dumps(["red"]),
+      tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"]),
       article = article
     )
     newImage.save()
