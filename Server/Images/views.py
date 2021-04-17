@@ -78,6 +78,7 @@ class ImageListView(APIView):
     print("IN POST")
     print(request.data)
     file = request.data['file']
+    article = str(request.data['article'])
     print(file.size)
     # IPFS upload
     if not file:
@@ -108,6 +109,7 @@ class ImageListView(APIView):
     # upload to IPFS finally
     file_to_upload = BytesIO(image_exif.get_file())
     ipfsResponse = ipfs.add(file_to_upload)
+    file_to_upload.close()
     if not ipfsResponse:
       return Response("IPFS processing error")
     else:
@@ -119,12 +121,20 @@ class ImageListView(APIView):
     ethResp = contract.functions.saveHash(ipfsResponse['Hash']).call()
     print("ETHEREUM RESPONSE", ethResp)
     # Saving the model locally
+    article_to_upload = BytesIO(str(ipfsResponse['Hash']) + '\n' + article).encode(encoding='UTF-8')
+    article_ipfs_response = ipfs.add(article_to_upload)
+    article_to_upload.close()
+    if not article_ipfs_response:
+      return Response("IPFS processing error")
+    ethResp = contract.functions.saveHash(article_ipfs_response['Hash']).call()
 
     newImage = Image(
       label = request.data["label"],
       timestamp = dateutil.parser.parse(request.data["datetime"]),
-      ipfsHash = ipfsResponse["Hash"],
-      ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
+      imgipfsHash = ipfsResponse["Hash"],
+      imgipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
+      textipfsHash = article_ipfs_response['Hash'],
+      textipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(article_ipfs_response['Hash']),
       transactionHash = ipfsResponse["Hash"],
       # TODO: Change below to actual value
       blockHash = ipfsResponse["Hash"],
@@ -149,32 +159,35 @@ class ImageDetailView(APIView):
 
   def get_object(self, ipfsHash):
     try: 
-      return Image.objects.get(ipfsHash=ipfsHash)
+      return Image.objects.get(textipfsHash=ipfsHash)
     except Image.DoesNotExist:
-        '''
-        Python's support for IPFS is hot garbage
+      text = ipfs.cat(ipfsHash).decode('utf-8')
+      string_segments = text.split('\n')
+      img_hash = string_segments[0]
+      article = string_segments[1]
 
-        image = base64.b64decode(ipfs.cat(ipfsHash))
-        print(image)
-        # This next bit assumes the IPFS hash led to an image
-        image_exif = exImage(image.getvalue())
-        image_details_dict = image_exif.image_description
-        print("here")
-        newImage = Image(
-          label = image_details_dict['label'],
-          timestamp = image_details_dict['timestamp'],
-          ipfsHash = ipfsHash,
-          ipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsHash),
-          transactionHash = ipfsHash,
-          blockHash = ipfsHash,
-          photo = image
-        )
-        print(newImage)
-        newImage.save()
-        print("saved")
-        return newImage
-        '''
-        raise Http404
+      image = ipfs.cat(img_hash)
+      # This next bit assumes the IPFS hash led to an image
+      image_exif = exImage(image)
+      image_details_dict = ast.literal_eval(image_exif.image_description)
+      newImage = Image(
+        label = image_details_dict['label'],
+        timestamp = image_details_dict['timestamp'],
+        imgipfsHash = img_hash,
+        imgipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(img_hash),
+        textipfsHash = ipfsHash,
+        textipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsHash),
+        transactionHash = img_hash,
+        blockHash = img_hash,
+        photo = ImageFile(BytesIO(image), name=image_details_dict['label']),
+        article = article
+      )
+      print(newImage)
+      newImage.save()
+      print("saved")
+      return newImage
+      
+      #raise Http404
       
   # Return image in response
   def get(self, request, ipfsHash, format=None):
