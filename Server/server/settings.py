@@ -27,13 +27,14 @@ SECRET_KEY = '-qjjv280!%1)79t%0qn=71q^m*sy%^o+nqr=j8kc3@ap(j8*rt'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0b1380d3896a.ngrok.io', 'localhost']
+ALLOWED_HOSTS = ['f0eadebdb46f.ngrok.io', 'localhost', '127.0.0.1']
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'rest_framework',
+    'rest_framework.authtoken',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'Images',
     'corsheaders',
+    'taggit',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +55,20 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     # TODO change this
+    #     'rest_framework.permissions.AllowAny'
+    # )
+}
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 ROOT_URLCONF = 'server.urls'

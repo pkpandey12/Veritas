@@ -33,8 +33,8 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 
-// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
-const ngroklink =  "http://0b1380d3896a.ngrok.io"// "http://246658e6313b.ngrok.io"
+// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK 
+const ngroklink = "https://f0eadebdb46f.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
