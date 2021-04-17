@@ -7,7 +7,7 @@
  */
 
 import React, { Component, Fragment } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, PixelRatio, Image, Linking, Dimensions, TextInput, ScrollView, FlatList } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, PixelRatio, Image, Linking, Dimensions, TextInput, ScrollView, FlatList, Modal } from 'react-native';
 import ImageLicker from 'react-native-image-picker';
 import { Icon, Container, Header, Left, Button, Body, Title, Right } from 'native-base';
 
@@ -24,7 +24,7 @@ import Constants from "expo-constants";
 const { manifest } = Constants;
 
 import axios from "axios";
-import ImageViewer from 'react-native-image-zoom-viewer';
+
 
 
 const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts.dev
@@ -34,7 +34,7 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 // CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
-const ngroklink =  "http://962b493a8b7c.ngrok.io"// "http://246658e6313b.ngrok.io"
+const ngroklink =  "http://0b1380d3896a.ngrok.io"// "http://246658e6313b.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -57,10 +57,14 @@ export default class App extends Component {
       uploadStatus: false,
       label: '',
       images: [],
-      description: '',
-      tags: ''
+      article: '',
+      tags: '',
+      isVisible: false
     };
   }
+  displayModal(show){
+  this.setState({isVisible: show})
+}
 
   componentDidMount() {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
@@ -72,7 +76,7 @@ export default class App extends Component {
         Accept: 'application/json'
       },
     };
-    axios.get(`${ngroklink}/images/`)
+    axios.get(`${ngroklink}/images/`) //--- .then((resp) => resp.json())
       .then((resp) => resp.json())
       .then((res) => {
         console.log("GET response", res)
@@ -88,6 +92,8 @@ export default class App extends Component {
           error: err.message
         });
       })
+      console.log("images:");
+    console.log(this.state.images);
   }
 
   getPermissionAsync = async () => {
@@ -208,13 +214,13 @@ export default class App extends Component {
       this.setState({ loading: null })
       return alert('Enter image label')
     }
-    if (this.state.description === '') {
+    if (this.state.article === '') {
       this.setState({ loading: null })
-      return alert('Enter image description')
+      return alert('Enter image article')
     }
     else {
       data.append('label', this.state.label);
-      data.append('description', this.state.description);
+      data.append('article', this.state.article);
       data.append('tags', this.state.tags);
       console.log("Trying to upload");
       console.log("this", data)
@@ -276,8 +282,8 @@ export default class App extends Component {
 
             <View style={{ alignItems: 'center' }}>
               <TextInput
-                placeholder="Description"
-                onChangeText={(description) => this.setState({ description })}
+                placeholder="article"
+                onChangeText={(article) => this.setState({ article })}
                 style={styles.label}
                 underlineColorAndroid="transparent"
               />
@@ -298,7 +304,7 @@ export default class App extends Component {
               </TouchableOpacity>
             </View>
           </View>
-          
+
         </View>{
           this.state.loading !== null ? (
             this.state.loading ? (
@@ -386,6 +392,8 @@ export default class App extends Component {
                                 </View>
                               ) :
                               (
+                               <View>
+
                                 <FlatList
                                   data={this.state.images}
                                   extraData={this.state.images}
@@ -393,6 +401,34 @@ export default class App extends Component {
                                   renderItem={(item, index) => {
 
                                     return (
+                                      <TouchableOpacity onPress={() => { this.displayModal(true);}}>
+                                      <View style = { styles.container2 }>
+                                      <Modal
+                                         animationType = {"slide"}
+                                         transparent={false}
+                                         visible={this.state.isVisible}
+                                         onRequestClose={() => {
+                                         Alert.alert('Modal has now been closed.');
+                                       }}>
+
+                                                       <View style = { styles.container2 }>
+                                                       <Image
+                                                         source={item.item.ipfsAddress}
+                                                       style = { styles.image }/>
+                                                       <Text >
+                                                           Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                                           Maecenas eget tempus augue, a convallis velit.
+                                                       </Text>
+
+                                                       <Text style={styles.closeText}
+                                                             onPress={() => {
+                                                               this.displayModal(!this.state.isVisible);}
+                                                               }>
+                                                               Go Back
+                                                       </Text>
+                                                       </View>
+                                       </Modal>
+                                       </View>
                                       <Card
                                         key={index}
                                         state={this.state}
@@ -403,10 +439,12 @@ export default class App extends Component {
                                         label={item.item.label}
                                         datetime={item.item.datetime}
                                       />
+                                      </TouchableOpacity>
                                     )
 
                                   }}
                                 />
+                                </View>
 
                               )}
                         </Fragment>
@@ -426,6 +464,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5FCFF',
   },
+  container2: {
+  padding: 25,
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
   avatarContainer: {
     borderColor: '#9B9B9B',
     borderWidth: 1 / PixelRatio.get(),
@@ -457,6 +501,17 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
   },
+  closeText: {
+  fontSize: 24,
+  color: '#00479e',
+  textAlign: 'center',
+},
+image: {
+  marginTop: 150,
+  marginBottom: 10,
+  width: '100%',
+  height: 350,
+},
 });
 
 // <TextContainer
