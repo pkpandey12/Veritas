@@ -35,7 +35,7 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 // CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
-const ngroklink = "http://21b287002e0c.ngrok.io"
+const ngroklink = "http://a55173f91abb.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -61,12 +61,22 @@ export default class App extends Component {
       article: '',
       tags: '',
       isVisible: false,
-      modalData: []
+      modalData: {},
+      address : null,
+      similarImages: [],
+      loginModalVisible: true
     };
   }
+
+  //Modal for more image details
   displayModal(show, modalData){
   this.setState({isVisible: show, modalData: modalData});
   console.log("ModalData", modalData);
+}
+
+  displayLoginModal(show){
+    this.setState({loginModalVisible: show});
+    console.log("displayLoginModal called");
 }
 
   componentDidMount() {
@@ -188,13 +198,14 @@ export default class App extends Component {
       };
 
 
-      fetch(`${ngroklink}/images/`, config) //        .then((resp) => resp.json())
+      fetch(`${ngroklink}/images/`, config) //
+        .then((resp) => resp.json())
         .then((res) => {
           console.log("POST response", res)
           this.setState((prevState) => ({
             label: res.label,
             hash: res.ipfsHash,
-            address: res.ipfsAddress,
+            address: res.imgipfsAddress,
             transactionHash: res.transactionHash,
             blockHash: res.blockHash,
             loading: false,
@@ -208,6 +219,36 @@ export default class App extends Component {
           });
         })
     }
+
+  }
+
+  similarImages = async () => {
+      console.log("fetching similar images");
+      const config = {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'multipart/form-data',
+        },
+        body: this.state.modalData.imgipfsHash,
+      };
+      //${this.state.modalData.imgipfsHash}
+      //QmduFGqosA52hTwXoqY2VVBAAX6PEJKqYhiXjk9ubRhuhw
+      axios.get(`${ngroklink}/images/similar/QmduFGqosA52hTwXoqY2VVBAAX6PEJKqYhiXjk9ubRhuhw`) //--- .then((resp) => resp.json())
+        .then((res) => {
+          console.log("GET response for similar images", res)
+          this.setState({
+            // images: res.data,
+            // fetchLoading: false
+            similarImages: res.data
+          })
+        })
+        .catch((err) => {
+          console.log('err', err)
+          this.setState({
+            error: err.message
+          });
+        })
 
   }
 
@@ -251,8 +292,8 @@ export default class App extends Component {
               />
             </View>
 
-            <View style={{ alignItems: 'center', marginTop: '10%' }}>
-              <TouchableOpacity onPress={() => this.upload()} style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF' }]}>
+            <View style={{ alignItems: 'center' }}>
+              <TouchableOpacity onPress={() => this.upload()} style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF', marginTop: '2%' }]}>
                 <Text style={{ fontWeight: 'bold' }}>UPLOAD</Text>
               </TouchableOpacity>
             </View>
@@ -334,6 +375,38 @@ export default class App extends Component {
                       <ScrollView style={{ flex: 1 }}
                         contentContainerStyle={{ flex: 1 }}
                       >
+                      <Modal
+                         animationType = {"slide"}
+                         transparent={false}
+                         visible={this.state.loginModalVisible}
+                         onRequestClose={() => {
+                         Alert.alert('Modal has now been closed.');
+                       }}>
+
+                              <View style = { [styles.container2,{ backgroundColor: "#33A8FF"}] }>
+                                <Text style={{ fontSize:'200'}}>V</Text>
+                                <Text style={{ fontSize:'50'}}>Veritas</Text>
+                                       <View style={{ alignItems: 'center', marginTop: '1%', backgroundColor: 'white' }}>
+
+                                         <TextInput
+                                           placeholder="username"
+                                           style={styles.label2}
+                                           underlineColorAndroid="transparent"
+                                         />
+                                       </View>
+
+                                       <View style={{ alignItems: 'center', marginTop: '1%', backgroundColor: 'white' }}>
+                                         <TextInput
+                                           placeholder="login"
+                                           style={styles.label2}
+                                           underlineColorAndroid="transparent"
+                                         />
+                                       </View>
+                                       <TouchableOpacity onPress={() => {  this.displayLoginModal(!this.state.loginModalVisible);}  } style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: 'white', marginTop: '1%' }]}>
+                                              <Text style={{ fontWeight: 'bold' }}>Login</Text>
+                                       </TouchableOpacity>
+                                </View>
+                       </Modal>
                         <Fragment>
                           {
                             this.state.images.length === 0 ?
@@ -367,18 +440,25 @@ export default class App extends Component {
                                                        <View style = { styles.container2 }>
                                                            <Image source={{ uri: this.state.modalData.imgipfsAddress }} style={{ width: 300, height: 300 }} />
                                                             <Text >
-                                                             Name: {"\t"}{this.state.modalData.label} {"\n"}
+                                                             Name: {"\t\t\t"}{this.state.modalData.label} {"\n"}
+                                                             Location:{"\t"} Hong Kong{"\n"}
                                                              Date and Time: {"\t"}{moment(this.state.modalData.createdAt).format("MMMM Do YYYY, h:mm:ss a")} {"\n"}
                                                              IPFSAddress: {"\t"}{this.state.modalData.imgipfsAddress} {"\n"}
                                                              BlockHash: {"\t"}{this.state.modalData.blockHash} {"\n"}
+                                                             Tags: {"\t"}{this.state.modalData.tags} {"\n"}
+                                                             Article IPFS: {"\t"}{this.state.modalData.articleipfsHash} {"\n"}
+
                                                             </Text>
 
-                                                            <Text style={styles.closeText}
-                                                             onPress={() => {
-                                                               this.displayModal(!this.state.isVisible, []);}
-                                                               }>
-                                                               Go Back
-                                                       </Text>
+                                                            <View style={{ alignItems: 'center', marginTop: '10%' }}>
+                                                              <TouchableOpacity onPress={() => this.similarImages()} style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF' }]}>
+                                                                <Text style={{ fontWeight: 'bold' }}>Similar Images</Text>
+                                                              </TouchableOpacity>
+                                                            </View>
+
+                                                            <TouchableOpacity onPress={() => {  this.displayModal(!this.state.isVisible, []);}  } style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF' }]}>
+                                                              <Text style={{ fontWeight: 'bold' }}>Go Back</Text>
+                                                            </TouchableOpacity>
                                                        </View>
                                        </Modal>
                                        </View>
@@ -443,6 +523,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 10,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
+  },
+  label2: {
+    height: 40,
+    width: width * 0.8,
+    alignItems: 'center',
+    paddingLeft: '8%',
+    borderWidth: 1,
+
   },
   uploadbutton: {
     height: 40,
