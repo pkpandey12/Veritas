@@ -27,6 +27,9 @@ const { manifest } = Constants;
 import axios from "axios";
 
 
+//import FastImage from 'react-native-fast-image'
+
+
 
 const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts.dev
   ? manifest.debuggerHost.split(`:`).shift().concat(`:8000`)
@@ -384,8 +387,8 @@ export default class App extends Component {
                        }}>
 
                               <View style = { [styles.container2,{ backgroundColor: "#33A8FF"}] }>
-                                <Text style={{ fontSize:'200'}}>V</Text>
-                                <Text style={{ fontSize:'50'}}>Veritas</Text>
+                                <Text style={{ fontSize:200}}>V</Text>
+                                <Text style={{ fontSize:50}}>Veritas</Text>
                                        <View style={{ alignItems: 'center', marginTop: '1%', backgroundColor: 'white' }}>
 
                                          <TextInput
@@ -436,7 +439,7 @@ export default class App extends Component {
                                          onRequestClose={() => {
                                          Alert.alert('Modal has now been closed.');
                                        }}>
-
+                                       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
                                                        <View style = { styles.container2 }>
                                                            <Image source={{ uri: this.state.modalData.imgipfsAddress }} style={{ width: 300, height: 300 }} />
                                                             <Text >
@@ -456,10 +459,43 @@ export default class App extends Component {
                                                               </TouchableOpacity>
                                                             </View>
 
-                                                            <TouchableOpacity onPress={() => {  this.displayModal(!this.state.isVisible, []);}  } style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF' }]}>
+                                                            <TouchableOpacity onPress={() => {  this.displayModal(!this.state.isVisible, []);}  } style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF', marginTop: '1%' }]}>
                                                               <Text style={{ fontWeight: 'bold' }}>Go Back</Text>
                                                             </TouchableOpacity>
+
+                                                            <Fragment>
+                                                              {
+                                                                this.state.similarImages.length === 0 ?
+                                                                  (
+                                                                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                                                    </View>
+                                                                  ) :
+                                                                  (
+                                                                   <View>
+
+                                                                    <FlatList
+                                                                      data={this.state.similarImages}
+                                                                      extraData={this.state.images}
+                                                                      style = {{marginTop : '1%'}}
+                                                                      keyExtractor={(item, index) => index.toString()}
+                                                                      renderItem={(item, index) => {
+
+                                                                        return (
+                                                                          <View>
+                                                                            <Image source={{ uri: "https://gateway.ipfs.io/ipfs/"+item.item.ipfsHash }} style={{ width: 300, height: 300, alignItems: 'center' }} />
+                                                                            <Text >IPFS Hash: {item.item.ipfsHash}</Text>
+                                                                            <Text >Percentage: {Math.round(item.item.percentage)} %</Text>
+                                                                          </View>
+                                                                        )
+
+                                                                      }}
+                                                                    />
+                                                                    </View>
+
+                                                                  )}
+                                                            </Fragment>
                                                        </View>
+                                              </ScrollView>
                                        </Modal>
                                        </View>
                                       <Card
