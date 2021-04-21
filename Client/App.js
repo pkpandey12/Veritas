@@ -440,9 +440,9 @@ export default class App extends Component {
                                          Alert.alert('Modal has now been closed.');
                                        }}>
                                        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
-                                                       <View style = { styles.container2 }>
-                                                           <Image source={{ uri: this.state.modalData.imgipfsAddress }} style={{ width: 300, height: 300 }} />
-                                                            <Text >
+                                                       <View style = { [styles.container2, {marginTop: '3%' }]}>
+                                                           <Image source={{ uri: this.state.modalData.imgipfsAddress, cache: 'only-if-cached' }} style={{ width: 300, height: 300 }} />
+                                                            <Text style={{  marginTop: '2%' }}>
                                                              Name: {"\t\t\t"}{this.state.modalData.label} {"\n"}
                                                              Location:{"\t"} Hong Kong{"\n"}
                                                              Date and Time: {"\t"}{moment(this.state.modalData.createdAt).format("MMMM Do YYYY, h:mm:ss a")} {"\n"}
@@ -453,7 +453,7 @@ export default class App extends Component {
 
                                                             </Text>
 
-                                                            <View style={{ alignItems: 'center', marginTop: '10%' }}>
+                                                            <View style={{ alignItems: 'center', marginTop: '2%' }}>
                                                               <TouchableOpacity onPress={() => this.similarImages()} style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF' }]}>
                                                                 <Text style={{ fontWeight: 'bold' }}>Similar Images</Text>
                                                               </TouchableOpacity>
@@ -482,7 +482,7 @@ export default class App extends Component {
 
                                                                         return (
                                                                           <View>
-                                                                            <Image source={{ uri: "https://gateway.ipfs.io/ipfs/"+item.item.ipfsHash }} style={{ width: 300, height: 300, alignItems: 'center' }} />
+                                                                            <Image source={{ uri: "https://gateway.ipfs.io/ipfs/"+item.item.ipfsHash , cache: 'only-if-cached'}} style={{ width: 300, height: 300, alignItems: 'center' }} />
                                                                             <Text >IPFS Hash: {item.item.ipfsHash}</Text>
                                                                             <Text >Percentage: {Math.round(item.item.percentage)} %</Text>
                                                                           </View>
