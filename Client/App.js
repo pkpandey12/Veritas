@@ -354,7 +354,7 @@ export default class App extends Component {
 
             </Body>
             <Right>
-              <Button transparent onPress={() => this.setState({ clickUpload: !this.state.clickUpload, avatarSource: null, address: null, transactionHash: null, blockHash: null })}>{
+              <Button transparent onPress={() => this.setState({ clickUpload: !this.state.clickUpload, avatarSource: null, address: null, transactionHash: null, blockHash: null, loading: null })}>{
                 !!this.state.clickUpload ?
                   (<Text> HOME </Text>)
                   : (<Text> ADD </Text>)
