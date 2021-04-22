@@ -28,6 +28,7 @@ import ipfshttpclient
 import base64
 import ast
 import dateutil.parser
+from hexbytes import HexBytes
 # Create your views here.
 
 blockchain_address = 'http://localhost:7545'
@@ -42,7 +43,7 @@ web3.eth.defaultAccount = web3.eth.accounts[0]
 # This depends on your PC's path gotta change it
 #compiled_contract_path = '/Users/praneetkumarpandey/FYP/RevPro-FYP/veritas/Server/Blockchain/build/contracts/ImageHash.json'
 
-compiled_contract_path = '/Users/tanmaynautiyal/Desktop/Veritas/Server/Blockchain/build/contracts/ImageHash.json'
+compiled_contract_path = '/Users/praneetkumarpandey/FYP/RevPro-FYP/veritas/Server/Blockchain/build/contracts/ImageHash.json'
 # Change this every time you to deploy to Ganache
 deployed_contract_address = '0xC421c64d05562890aA8a6498f89A7AeCc0913D1e'
 
@@ -81,7 +82,7 @@ class ImageListView(APIView):
     print("IN POST")
     print(request.data)
     file = request.data['file']
-    article = request.data['article']
+    article = request.data["article"]
     print(file.size)
     # IPFS upload
     if not file:
@@ -115,7 +116,7 @@ class ImageListView(APIView):
     image_data = {
       "label": request.data['label'],
       "timestamp": request.data['datetime'],
-      "tags": request.data['tags'],
+      "tags": request.data["tags"],
       "article_hash": article_ipfs_response['Hash']
     }
     # image description seemed a good tag to use
@@ -130,8 +131,7 @@ class ImageListView(APIView):
       print("IPFS upload successful, hash = " + str(ipfsResponse['Hash']))
 
     # Blockchain upload
-    # TODO: Add error handling
-
+    
     ethResp = contract.functions.saveHash(ipfsResponse['Hash']).call()
     print("ETHEREUM RESPONSE", ethResp)
     # Saving the model locally
@@ -142,9 +142,8 @@ class ImageListView(APIView):
       imgipfsHash = ipfsResponse["Hash"],
       imgipfsAddress = "https://gateway.ipfs.io/ipfs/"+str(ipfsResponse['Hash']),
       articleipfsHash = article_ipfs_response['Hash'],
-      transactionHash = ipfsResponse["Hash"],
-      # TODO: Change below to actual value
-      blockHash = ipfsResponse["Hash"],
+      transactionHash = (web3.eth.get_transaction_by_block('latest', 0).hash).hex(),
+      blockHash = (web3.eth.get_block('latest').hash).hex(),
       photo = request.data["file"],
       tags = json.dumps([x.strip() for x in request.data["tags"].split(',')] if request.data["tags"] else ["red"]),
       article = article
@@ -207,8 +206,8 @@ class ImageTagView(APIView):
     for i in images:
       if all(item in i.get_tags() for item in request.data["tags"]):
         ids.append(i.imgipfsHash)
-
-    filtered_images = Image.objects.filter(imgipfsHash__in=ids)
+    
+    filtered_images = Image.objects.filter(imgipfsHash__in=ids).filter(verified=True)
     serializer = ImageSerializer(filtered_images, many=True)
     return Response(serializer.data)
 

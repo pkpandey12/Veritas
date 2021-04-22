@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import axios from "axios";
-import {Paper, Card, CardActionArea, CardMedia, CardContent, Typography, TextField, Button} from "@material-ui/core";
+import {Paper, Card, CardActionArea, CardMedia, CardContent, Typography, TextField, Button, CardActions} from "@material-ui/core";
 import {makeStyles} from "@material-ui/core/styles";
 import Pagination from "@material-ui/lab/Pagination";
+import CopyToClipboard from "./CopyToClipboard";
 
 const useStyles = makeStyles((theme)=>({
   root: {
@@ -38,6 +39,9 @@ const useStyles = makeStyles((theme)=>({
     flexDirection: "row",
     justifyContent: "space-around"
 
+  },
+  copyButton: {
+    margin: "auto"
   }
 }))
 
@@ -77,7 +81,9 @@ export default function Search(this: any) {
     setActive(images.slice(9*(value-1), 9*value))
   }
 
+
   function ImageCard(props:any){
+
     return(
       <Card className={classes.cards}>
         <CardActionArea>
@@ -97,6 +103,21 @@ export default function Search(this: any) {
             </Typography>
           </CardContent>
         </CardActionArea>
+
+        <CardActions>
+          <CopyToClipboard>
+          {({ copy }) => (
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => copy(`<img src="${props.image["imgipfsAddress"]}" alt="ipfs-image" style="border: 20px solid green">`)}
+                className={classes.copyButton}
+              >
+                Copy HTML link for this image
+              </Button>
+            )}
+          </CopyToClipboard>
+        </CardActions>
       </Card>
     )
   }

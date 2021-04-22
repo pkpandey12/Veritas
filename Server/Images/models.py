@@ -18,6 +18,7 @@ class Image(models.Model):
   photo = models.ImageField(upload_to='images')
   tags = models.TextField(default=json.dumps(["image"]))
   article = models.TextField(default='Image article')
+  verified = models.BooleanField(default=False)
 
   def __str__(self):
     return self.label

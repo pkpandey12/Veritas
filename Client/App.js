@@ -13,6 +13,7 @@ import { Icon, Container, Header, Left, Button, Body, Title, Right, Thumbnail } 
 
 import Spinner from './components/Spinner';
 import Card from './components/Card';
+import CachedImage from './components/CachedImage';
 import TextContainer from './components/TextContainer';
 
 import * as ImagePicker from 'expo-image-picker';
@@ -37,8 +38,8 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 
-// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
-const ngroklink = "http://a55173f91abb.ngrok.io"
+// CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK 
+const ngroklink = "https://1cfbd6475f17.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -47,6 +48,8 @@ const options = {
     path: 'images',
   },
 };
+
+const B = (props) => <Text style={{fontWeight: 'bold'}}>{props.children}</Text>
 
 const { height, width } = Dimensions.get('window');
 
@@ -403,6 +406,7 @@ export default class App extends Component {
                                            placeholder="login"
                                            style={styles.label2}
                                            underlineColorAndroid="transparent"
+                                           secureTextEntry={true}
                                          />
                                        </View>
                                        <TouchableOpacity onPress={() => {  this.displayLoginModal(!this.state.loginModalVisible);}  } style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: 'white', marginTop: '1%' }]}>
@@ -441,15 +445,22 @@ export default class App extends Component {
                                        }}>
                                        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flex: 1 }}>
                                                        <View style = { [styles.container2, {marginTop: '3%' }]}>
-                                                           <Image source={{ uri: this.state.modalData.imgipfsAddress, cache: 'only-if-cached' }} style={{ width: 300, height: 300 }} />
+                                                            <CachedImage
+                                                              source={{ uri: this.state.modalData.imgipfsAddress }}
+                                                              cacheKey={this.state.modalData.imgipfsHash}
+                                                              style={{ width: 300, height: 300 }}
+                                                            />
+                                                           {/* <Image source={{ uri: this.state.modalData.imgipfsAddress }} style={{ width: 300, height: 300 }} /> */}
                                                             <Text style={{  marginTop: '2%' }}>
-                                                             Name: {"\t\t\t"}{this.state.modalData.label} {"\n"}
-                                                             Location:{"\t"} Hong Kong{"\n"}
-                                                             Date and Time: {"\t"}{moment(this.state.modalData.createdAt).format("MMMM Do YYYY, h:mm:ss a")} {"\n"}
-                                                             IPFSAddress: {"\t"}{this.state.modalData.imgipfsAddress} {"\n"}
-                                                             BlockHash: {"\t"}{this.state.modalData.blockHash} {"\n"}
-                                                             Tags: {"\t"}{this.state.modalData.tags} {"\n"}
-                                                             Article IPFS: {"\t"}{this.state.modalData.articleipfsHash} {"\n"}
+                                                             <B>Name:</B> {"\t"}{this.state.modalData.label} {"\n"}
+                                                             <B>Article</B>{"\n"}
+                                                             {this.state.modalData.article} {"\n"}{"\n"}
+                                                             <B>Location:</B>{"\t"} Hong Kong{"\n"}
+                                                             <B>Date and Time:</B> {"\t"}{moment(this.state.modalData.createdAt).format("MMMM Do YYYY, h:mm:ss a")}{"\n"}
+                                                             <B>IPFSAddress:</B> {"\t"}{this.state.modalData.imgipfsAddress} {"\n"}
+                                                             <B>BlockHash:</B> {"\t"}{this.state.modalData.blockHash} {"\n"}
+                                                             <B>Tags:</B> {"\t"}{this.state.modalData.tags} {"\n"}
+                                                             <B>Article IPFS:</B> {"\t"}{this.state.modalData.articleipfsHash} {"\n"}
 
                                                             </Text>
 
@@ -482,9 +493,14 @@ export default class App extends Component {
 
                                                                         return (
                                                                           <View>
-                                                                            <Image source={{ uri: "https://gateway.ipfs.io/ipfs/"+item.item.ipfsHash , cache: 'only-if-cached'}} style={{ width: 300, height: 300, alignItems: 'center' }} />
-                                                                            <Text >IPFS Hash: {item.item.ipfsHash}</Text>
-                                                                            <Text >Percentage: {Math.round(item.item.percentage)} %</Text>
+                                                                            <CachedImage
+                                                                              source={{ uri: "https://gateway.ipfs.io/ipfs/"+item.item.ipfsHash }}
+                                                                              cacheKey={item.item.ipfsHash}
+                                                                              style={{ width: 300, height: 300 }}
+                                                                            />
+                                                                            {/* <Image source={{ uri: "https://gateway.ipfs.io/ipfs/"+item.item.ipfsHash }} style={{ width: 300, height: 300, alignItems: 'center' }} /> */}
+                                                                            <Text ><B>IPFS Hash:</B> {item.item.ipfsHash}</Text>
+                                                                            <Text ><B>Percentage</B>: {Math.round(item.item.percentage)} %</Text>
                                                                           </View>
                                                                         )
 
@@ -501,6 +517,7 @@ export default class App extends Component {
                                       <Card
                                         key={index}
                                         state={this.state}
+                                        imghash = {item.item.imgipfsHash}
                                         createdAt={item.item.createdAt}
                                         address={item.item.imgipfsAddress}
                                         blockHash={item.item.blockHash}

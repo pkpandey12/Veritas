@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Image, View, StyleSheet, Dimensions, TouchableOpacity, Alert } from 'react-native';
 import { Container, Header, Content, Card, CardItem, Thumbnail, Text, Button, Icon, Left, Body} from 'native-base';
+import { CachedImage } from "./CachedImage";
 import moment from 'moment';
 const { height } = Dimensions.get('window');
 import ImageView from "react-native-image-viewing";
@@ -14,12 +15,17 @@ const styles = StyleSheet.create({
 })
 //<Text>datetime: {datetime?datetime:""} </Text>
 export default ({
-    state, address, blockHash, transactionHash, label, createdAt, datetime
+    state, address, blockHash, transactionHash, label, createdAt, datetime, ipfshash
 }) => (
         <View style={{ height: height / 6 }}>
             <Card style={{ flex: 1 }}>
                 <CardItem>
                     <Left>
+                    {/* <CachedImage
+                        source={{ uri: address }}
+                        cacheKey={ipfshash}
+                        style={{ width: 90, height: 90 }}
+                    /> */}
                       <Image source={{ uri: address, cache: 'only-if-cached'}} style={{ width: 90, height: 90 }} />
                         <Body>
                             <Text><B>Name: </B>{label} </Text>
