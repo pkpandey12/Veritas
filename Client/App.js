@@ -84,6 +84,11 @@ export default class App extends Component {
     console.log("displayLoginModal called");
 }
 
+  displayUploadModal(show){
+  this.setState({loading: show});
+  console.log("uploadLoginModal called");
+}
+
   componentDidMount() {
     LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
     this.getPermissionAsync();
@@ -259,8 +264,7 @@ export default class App extends Component {
 
   newUploadScreen() {
     return (
-      <ScrollView style={styles.container}
-        contentContainerStyle={{ flex: 1 }} >
+      <ScrollView style={styles.container} contentContainerStyle={{ flex: 1 }} >
       <View style={{ flex: 1, marginTop: 10 }}>
         <View style={{ alignItems: 'center', flex: 1 }}>
           <View style={{ marginTop: '1%', flex: 1 }}>
@@ -306,30 +310,49 @@ export default class App extends Component {
             </View>
           </View>
 
+
         </View>{
           this.state.loading !== null ? (
             this.state.loading ? (
               <Spinner size="large" />
             ) : (
-                <View>
-                  <TextContainer
-                    first="Uploaded! Address on IPFS:"
-                    second={this.state.address}
-                    link={() => Linking.openURL(this.state.address)}
-                    style={{ color: 'blue', textDecorationLine: 'underline' }}
-                  />
+              <Modal
+                 animationType = {"slide"}
+                 transparent={false}
+                 visible={!this.state.loading}
+                 onRequestClose={() => {
+                 Alert.alert('Modal has now been closed.');
+               }}>
+                <View style = { [styles.container2, {marginTop: '3%' }]}>
 
-                  <TextContainer
-                    first="Transaction Hash"
-                    second={this.state.transactionHash}
-                  />
+                  <Text style={{fontWeight: "bold", fontSize:30}}>
+                    Uploaded!
+                  </Text>
+                  <Text >
+                    Address on IPFS:
+                  </Text>
+                  <Text style={{color: 'blue'}} onPress={() => Linking.openURL(this.state.address)}>
+                    {this.state.address}
+                  </Text>
+                  <Text >
+                    Transaction Hash:
+                  </Text>
+                  <Text>
+                    {this.state.transactionHash}
+                  </Text>
+                  <Text >
+                    Block Hash:
+                  </Text>
+                  <Text>
+                    {this.state.blockHash}
+                  </Text>
 
-                  <TextContainer
-                    first="Block Hash"
-                    second={this.state.blockHash}
-                  />
+                  <TouchableOpacity onPress={() => {  this.displayUploadModal(null);}  } style={[styles.uploadbutton, { justifyContent: 'center', backgroundColor: '#33A8FF', marginTop: '1%' }]}>
+                    <Text style={{ fontWeight: 'bold' }}>Go Back</Text>
+                  </TouchableOpacity>
 
                 </View>
+                </Modal>
               )
           ) : null
         }
