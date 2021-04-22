@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 
-import os 
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +27,7 @@ SECRET_KEY = '-qjjv280!%1)79t%0qn=71q^m*sy%^o+nqr=j8kc3@ap(j8*rt'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['f40ebdd05da3.ngrok.io', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['1cfbd6475f17.ngrok.io', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -98,11 +98,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'djongo',
         'CLIENT': {
-            'name': 'veritasTest',
-            'host' :'mongodb+srv://veritasfyp:veritas@cluster0.krdu2.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+            'name': 'veritasProd',
+            'host' :'mongodb+srv://veritasfyp:veritas@cluster0.krdu2.mongodb.net/veritasProd?retryWrites=true&w=majority',
             'username': 'veritasfyp' ,
             'password': 'veritas' ,
-            'authMechanism' : 'SCRAM-SHA-1' 
+            'authMechanism' : 'SCRAM-SHA-1'
     #  'default': {
     #      'ENGINE': 'djongo',
     #      'NAME': 'your-db-name',

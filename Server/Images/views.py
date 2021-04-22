@@ -41,8 +41,9 @@ web3.eth.defaultAccount = web3.eth.accounts[0]
 # TODO: REMEMBER TO CHANGE THESE TO GANACHE SETTINGS AFTER BASIC SERVER TESTS ARE FINISHED
 
 # This depends on your PC's path gotta change it
-compiled_contract_path = '/Users/praneetkumarpandey/FYP/RevPro-FYP/veritas/Server/Blockchain/build/contracts/ImageHash.json'
+#compiled_contract_path = '/Users/praneetkumarpandey/FYP/RevPro-FYP/veritas/Server/Blockchain/build/contracts/ImageHash.json'
 
+compiled_contract_path = '/Users/praneetkumarpandey/FYP/RevPro-FYP/veritas/Server/Blockchain/build/contracts/ImageHash.json'
 # Change this every time you to deploy to Ganache
 deployed_contract_address = '0xC421c64d05562890aA8a6498f89A7AeCc0913D1e'
 
@@ -63,7 +64,7 @@ Helper functions
 
 # message = contract.functions.sayHello().call()
 
-# Request format: 
+# Request format:
 #     file: the image to be uploaded
 #     label: the image's label
 #     datetime: the timestamp of the image
@@ -86,17 +87,17 @@ class ImageListView(APIView):
     # IPFS upload
     if not file:
       return Response("No file provided")
-    
-    # gets raw bytes from the file so the buffer can be read 
+
+    # gets raw bytes from the file so the buffer can be read
     # instead of saving to storage first
-    
+
     image_from_request = file.read()
     if "image" not in magic.from_buffer(image_from_request, mime=True):
       return Response("File provided must be an image")
-    
+
     if file.size > MAX_SIZE:
       return Response("File provided must be less than "+str(MAX_SIZE)+" bytes")
-    
+
     # upload article to IPFS
     article_to_upload = BytesIO(article.encode(encoding='UTF-8'))
     article_ipfs_response = ipfs.add(article_to_upload)
@@ -105,7 +106,7 @@ class ImageListView(APIView):
       return Response("IPFS processing error")
     else:
       print("IPFS upload successful, hash = " + str(article_ipfs_response['Hash']))
-    
+
     ethResp = contract.functions.saveHash(article_ipfs_response['Hash']).call()
 
     # this package lets you add stuff to the EXIF, so we can have some
@@ -164,7 +165,7 @@ class ImageListView(APIView):
 class ImageDetailView(APIView):
 
   def get_object(self, ipfsHash):
-    try: 
+    try:
       return Image.objects.get(imgipfsHash=ipfsHash)
     except Image.DoesNotExist:
       image = ipfs.cat(ipfsHash)
@@ -184,7 +185,7 @@ class ImageDetailView(APIView):
       newImage.save()
       return newImage
       #raise Http404
-      
+
   # Return image in response
   def get(self, request, ipfsHash, format=None):
     image = self.get_object(ipfsHash)
