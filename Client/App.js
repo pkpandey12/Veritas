@@ -38,7 +38,7 @@ const api = (typeof manifest.packagerOpts === `object`) && manifest.packagerOpts
 
 
 // CHANGE THIS LINK TO REFLECT LOCAL NGROK LINK
-const ngroklink = "http://a55173f91abb.ngrok.io"
+const ngroklink = "http://b7f0a03d0483.ngrok.io"
 
 const options = {
   title: 'Select Avatar',
@@ -67,7 +67,9 @@ export default class App extends Component {
       modalData: {},
       address : null,
       similarImages: [],
-      loginModalVisible: true
+      loginModalVisible: true,
+      transactionHash: null,
+      blockHash: null
     };
   }
 
@@ -237,7 +239,7 @@ export default class App extends Component {
       };
       //${this.state.modalData.imgipfsHash}
       //QmduFGqosA52hTwXoqY2VVBAAX6PEJKqYhiXjk9ubRhuhw
-      axios.get(`${ngroklink}/images/similar/QmduFGqosA52hTwXoqY2VVBAAX6PEJKqYhiXjk9ubRhuhw`) //--- .then((resp) => resp.json())
+      axios.get(`${ngroklink}/images/similar/${this.state.modalData.imgipfsHash}`) //--- .then((resp) => resp.json())
         .then((res) => {
           console.log("GET response for similar images", res)
           this.setState({
@@ -257,9 +259,11 @@ export default class App extends Component {
 
   newUploadScreen() {
     return (
+      <ScrollView style={styles.container}
+        contentContainerStyle={{ flex: 1 }} >
       <View style={{ flex: 1, marginTop: 10 }}>
         <View style={{ alignItems: 'center', flex: 1 }}>
-          <View style={{ marginTop: '10%', flex: 1 }}>
+          <View style={{ marginTop: '1%', flex: 1 }}>
             <TouchableOpacity onPress={() => this._pickImage()}>
               <View style={[styles.avatar, styles.avatarContainer, { marginBottom: 20 }]}>
                 {this.state.avatarSource === null ? <Text>Select a Photo</Text> :
@@ -330,6 +334,7 @@ export default class App extends Component {
           ) : null
         }
       </View>
+      </ScrollView>
     )
   }
   render() {
@@ -349,7 +354,7 @@ export default class App extends Component {
 
             </Body>
             <Right>
-              <Button transparent onPress={() => this.setState({ clickUpload: !this.state.clickUpload })}>{
+              <Button transparent onPress={() => this.setState({ clickUpload: !this.state.clickUpload, avatarSource: null, address: null, transactionHash: null, blockHash: null })}>{
                 !!this.state.clickUpload ?
                   (<Text> HOME </Text>)
                   : (<Text> ADD </Text>)
