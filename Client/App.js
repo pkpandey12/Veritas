@@ -453,7 +453,7 @@ export default class App extends Component {
                                                            {/* <Image source={{ uri: this.state.modalData.imgipfsAddress }} style={{ width: 300, height: 300 }} /> */}
                                                             <Text style={{  marginTop: '2%' }}>
                                                              <B>Name:</B> {"\t"}{this.state.modalData.label} {"\n"}
-                                                             <B>Article</B>{"\n"}
+                                                             <B>Article:</B>{"\n"}
                                                              {this.state.modalData.article} {"\n"}{"\n"}
                                                              <B>Location:</B>{"\t"} Hong Kong{"\n"}
                                                              <B>Date and Time:</B> {"\t"}{moment(this.state.modalData.createdAt).format("MMMM Do YYYY, h:mm:ss a")}{"\n"}
